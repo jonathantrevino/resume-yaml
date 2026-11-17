@@ -56,6 +56,6 @@ func init() {
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
-	rootCmd.PersistentFlags().StringVarP(&file, "file", "f", "resume-template.yaml", "path to resume YAML file")
+	rootCmd.PersistentFlags().StringVarP(&file, "file", "f", "resume.yaml", "path to resume YAML file")
 
 }
