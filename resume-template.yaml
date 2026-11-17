@@ -36,7 +36,7 @@ experience:
         keywords: ["go", "backend", "distributed systems"]
       - text: "Cut p99 latency by 40% by redesigning DynamoDB access patterns and adding a caching layer."
         keywords: ["aws", "dynamodb", "performance"]
-- company_name: "Oracle" 
+  - company_name: "Oracle" 
     job_title: "Software Engineer"
     location: 
       state: "Texas"
@@ -51,13 +51,13 @@ experience:
 
 projects:
   - name: "resumes-yaml"
-  - description: "Resume as YAML. A CLI and TUI that tailors a single resume file to job postings using keywords or a job URL."
-  - links: 
-      live_url: "https://resume-yaml.com"
-      github_url: "https://github.com/jonathantrevino/resume-yaml"
-  - start_date: 2026-11-16
-  - end_date: 
-  - bullets: 
+    description: "Resume as YAML. A CLI and TUI that tailors a single resume file to job postings using keywords or a job URL."
+    links: 
+        live_url: "https://resume-yaml.com"
+        github_url: "https://github.com/jonathantrevino/resume-yaml"
+    start_date: 2026-11-16
+    end_date: 
+    bullets: 
       - text: "Built a terminal UI with Bubble Tea and a scriptable command layer with Cobra, so every interactive action also works through flags." 
         keywords: ["go", "cli", "tui"]
       - text: "Designed a tag-based system that filters resume bullets to match keywords from a job posting."
