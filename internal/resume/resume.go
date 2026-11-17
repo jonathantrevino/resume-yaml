@@ -74,10 +74,10 @@ type Projects struct {
 // Decode .yaml path file into resume struct
 func (r *Resume) Load(p string) error {
 
-	// TODO: Move file path handling to dedicated package
+	// TODO: Move file path to file handling to dedicated package
 	info, err := os.Stat(p)
 	if err != nil {
-		return fmt.Errorf("getting file %s: %w", p, err)
+		return fmt.Errorf("file not found %s: %w", p, err)
 	}
 	if info.IsDir() {
 		return fmt.Errorf("is directory %s: %w", p, err)
