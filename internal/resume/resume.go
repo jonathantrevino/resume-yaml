@@ -77,19 +77,19 @@ func (r *Resume) Load(p string) error {
 	// TODO: Move file path to file handling to dedicated package
 	info, err := os.Stat(p)
 	if err != nil {
-		return fmt.Errorf("file not found %s: %w", p, err)
+		return fmt.Errorf("stat resume file: %w", err)
 	}
 	if info.IsDir() {
-		return fmt.Errorf("is directory %s: %w", p, err)
+		return fmt.Errorf("resume path %q is a directory", p)
 	}
 
 	data, err := os.ReadFile(p)
 	if err != nil {
-		return err
+		return fmt.Errorf("read resume file: %w", err)
 	}
 
 	if err := yaml.Unmarshal(data, r); err != nil {
-		return err
+		return fmt.Errorf("unmarshal resume yaml: %w", err)
 	}
 
 	return nil
