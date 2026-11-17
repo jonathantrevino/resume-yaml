@@ -22,9 +22,9 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var r resume.Resume
-		err := r.Load("/Users/jonathantrevino/workspace/projects/resume-yaml/resume-template.yaml")
+		err := r.Load(file)
 		if err != nil {
-			fmt.Println("loading file and decoding", err)
+			fmt.Println(err)
 		}
 	},
 }
