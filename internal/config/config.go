@@ -11,39 +11,73 @@ import (
 	"github.com/goccy/go-yaml"
 )
 
-var ErrNotInitialized = errors.New("resume.yaml not found; run 'resume-yaml init' to set up your vault")
+var ErrNotInitialized = errors.New("resume.yaml not found; run 'resume init' to set up your vault")
 
-//go:embed resume-template.yaml
+//go:embed resume.yaml
 var defaultTemplate []byte
 
 type Config struct {
 	VaultPath string `yaml:"vault_path"`
 }
 
-// Create ~/.config/resume-yaml/config.yaml for config file
-// Create ~/resumes folder (vault) for storing template and generated resumes
-func Init(force bool, vault string) error {
+type Paths struct {
+	ConfigFilePath  string
+	VaultFolderPath string
+	ResumeFilePath  string
+}
+
+// return path of config file
+func ConfigFilePath() (string, error) {
+
+	// get users config directory
+	config, err := os.UserConfigDir()
+	if err != nil {
+		return "", fmt.Errorf("get config directory: %w", err)
+	}
+
+	configFilePath := filepath.Join(config, "resume-yaml", "config.yaml")
+
+	return configFilePath, nil
+
+}
+
+// return path of home directory
+func DefaultVaultPath() (string, error) {
 
 	// get users home directory
 	home, err := os.UserHomeDir()
 	if err != nil {
-		return fmt.Errorf("get home directory: %w", err)
-	}
-	config, err := os.UserConfigDir()
-	if err != nil {
-		return fmt.Errorf("get config directory: %w", err)
+		return "", fmt.Errorf("get home directory: %w", err)
 	}
 
-	configPath := filepath.Join(config, "resume-yaml")
-	configFilePath := filepath.Join(configPath, "config.yaml")
 	vaultPath := filepath.Join(home, "resumes")
+	return vaultPath, nil
+}
+
+// Create ~/.config/resume-yaml/config.yaml for config file
+// Create ~/resumes folder (vault) for storing template and generated resumes
+func Init(force bool, vaultFlag string) error {
+
+	// get default paths
+	configFilePath, err := ConfigFilePath()
+	if err != nil {
+		return fmt.Errorf("get config file path: %w", err)
+	}
+
+	// get config directory path
+	configPath := filepath.Dir(configFilePath)
+	vaultPath, err := DefaultVaultPath()
+	if err != nil {
+		return fmt.Errorf("get vault path: %w", err)
+	}
 
 	// conditionally set vault path if user set --vault location
-	trueVaultPath := vaultPath
-	if vault != "" {
-		trueVaultPath = vault
+	if vaultFlag != "" {
+		vaultPath = vaultFlag
 	}
-	templatePath := filepath.Join(trueVaultPath, "resume.yaml")
+
+	// use conditional vault path and store resume.yaml there
+	templatePath := filepath.Join(vaultPath, "resume.yaml")
 
 	// if --force flag is set to false
 	// check if config file and resume template are
@@ -58,7 +92,7 @@ func Init(force bool, vault string) error {
 	}
 
 	cfg := Config{
-		VaultPath: trueVaultPath,
+		VaultPath: vaultPath,
 	}
 
 	fmt.Printf("Creating config folder at %s\n", configPath)
@@ -79,9 +113,9 @@ func Init(force bool, vault string) error {
 		return fmt.Errorf("write config: %w", err)
 	}
 
-	fmt.Printf("Creating resumes folder at %s\n", trueVaultPath)
+	fmt.Printf("Creating resumes folder at %s\n", vaultPath)
 	// create resumes folder (vault)
-	if err := os.MkdirAll(trueVaultPath, 0755); err != nil {
+	if err := os.MkdirAll(vaultPath, 0755); err != nil {
 		return fmt.Errorf("create vault path: %w", err)
 	}
 
@@ -93,13 +127,28 @@ func Init(force bool, vault string) error {
 
 	// create output folder
 	// TODO: add config setting for output folder name
-	outputPath := filepath.Join(trueVaultPath, "output")
+	outputPath := filepath.Join(vaultPath, "output")
 	fmt.Printf("Creating output folder at %s\n", outputPath)
 	if err := os.MkdirAll(outputPath, 0755); err != nil {
 		return fmt.Errorf("create output path: %w", err)
 	}
 
 	return nil
+}
+
+// unmarshal config.yaml
+func (c *Config) Load(p string) error {
+
+	data, err := os.ReadFile(p)
+	if err != nil {
+		return fmt.Errorf("reading config file %s: %w", p, err)
+	}
+
+	if err := yaml.Unmarshal(data, c); err != nil {
+		return fmt.Errorf("unmarshalling config: %w", err)
+	}
+
+	return err
 }
 
 // ensureAbsent returns nil if nothing exists at path, or an error
@@ -126,7 +175,7 @@ func UseFile(file string) (string, error) {
 			return "", fmt.Errorf("%w: %s", ErrNotInitialized, resolvedPath)
 		}
 
-		return "", fmt.Errorf("checking resuem file: %w", err)
+		return "", fmt.Errorf("checking resume file: %w", err)
 
 	}
 
@@ -151,12 +200,10 @@ func resolvePath(file string) (string, error) {
 
 	// 3. Use default vault path from config.yaml
 
-	config, err := os.UserConfigDir()
+	configFilePath, err := ConfigFilePath()
 	if err != nil {
-		return "", fmt.Errorf("get config directory: %w", err)
+		return "", fmt.Errorf("get config file: %w", err)
 	}
-
-	configFilePath := filepath.Join(config, "resume-yaml", "config.yaml")
 
 	// load config
 	data, err := os.ReadFile(configFilePath)
@@ -180,4 +227,37 @@ func resolvePath(file string) (string, error) {
 	templateFilePath := filepath.Join(c.VaultPath, "resume.yaml")
 
 	return templateFilePath, nil
+}
+
+func FindPaths(file string) (Paths, error) {
+
+	var p Paths
+	var c Config
+
+	// get config file location
+	configFilePath, err := ConfigFilePath()
+	if err != nil {
+		return p, fmt.Errorf("get config file path: %w", err)
+	}
+
+	p.ConfigFilePath = configFilePath
+
+	// load config
+	// to get vault folder location
+	if err := c.Load(configFilePath); err != nil {
+
+		return p, fmt.Errorf("get vault folder %w", err)
+	}
+
+	vaultFolderPath := c.VaultPath
+	p.VaultFolderPath = vaultFolderPath
+
+	// get resume.yaml file location
+	resumeFilePath, err := UseFile(file)
+	if err != nil {
+		return p, fmt.Errorf("use file: %w", err)
+	}
+	p.ResumeFilePath = resumeFilePath
+
+	return p, nil
 }
