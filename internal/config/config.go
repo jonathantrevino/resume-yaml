@@ -11,6 +11,8 @@ import (
 	"github.com/goccy/go-yaml"
 )
 
+var ErrNotInitialized = errors.New("resume.yaml not found; run 'resume-yaml init' to set up your vault")
+
 //go:embed resume-template.yaml
 var defaultTemplate []byte
 
@@ -29,10 +31,10 @@ func Init(force bool, vault string) error {
 	}
 	config, err := os.UserConfigDir()
 	if err != nil {
-		return fmt.Errorf("get home directory: %w", err)
+		return fmt.Errorf("get config directory: %w", err)
 	}
 
-	configPath := filepath.Join(config, ".config", "resume-yaml")
+	configPath := filepath.Join(config, "resume-yaml")
 	configFilePath := filepath.Join(configPath, "config.yaml")
 	vaultPath := filepath.Join(home, "resumes")
 
@@ -113,4 +115,69 @@ func ensureAbsent(path, name string) error {
 	default:
 		return fmt.Errorf("check %s: %w", path, err)
 	}
+}
+
+// verify resolvedPath to file (resume) exists
+func UseFile(file string) (string, error) {
+	resolvedPath, err := resolvePath(file)
+	info, err := os.Stat(resolvedPath)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return "", fmt.Errorf("%w: %s", ErrNotInitialized, resolvedPath)
+		}
+
+		return "", fmt.Errorf("checking resuem file: %w", err)
+
+	}
+
+	if info.IsDir() {
+		return "", fmt.Errorf("expected a file, got a directory: %s", resolvedPath)
+	}
+
+	return resolvedPath, nil
+}
+
+// check in order which file (resume) to use
+func resolvePath(file string) (string, error) {
+
+	// 1. user has set --file / -f flag
+	if file != "" {
+		return file, nil
+	}
+	// 2. RESUME_YAML_FILE environment variable is set
+	if envFile := os.Getenv("RESUME_YAML_FILE"); envFile != "" {
+		return envFile, nil
+	}
+
+	// 3. Use default vault path from config.yaml
+
+	config, err := os.UserConfigDir()
+	if err != nil {
+		return "", fmt.Errorf("get config directory: %w", err)
+	}
+
+	configFilePath := filepath.Join(config, "resume-yaml", "config.yaml")
+
+	// load config
+	data, err := os.ReadFile(configFilePath)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return "", fmt.Errorf("missing config at %s, %w", configFilePath, err)
+		}
+		return "", fmt.Errorf("reading config file: %w", err)
+	}
+
+	// unmarshal data
+	var c Config
+	if err := yaml.Unmarshal(data, &c); err != nil {
+		return "", fmt.Errorf("unmarshalling config data: %w", err)
+	}
+
+	if c.VaultPath == "" {
+		return "", fmt.Errorf("vault path not set in config %w", ErrNotInitialized)
+	}
+
+	templateFilePath := filepath.Join(c.VaultPath, "resume.yaml")
+
+	return templateFilePath, nil
 }
