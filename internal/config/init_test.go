@@ -2,6 +2,7 @@ package config_test
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"resume-yaml/internal/config"
@@ -14,6 +15,7 @@ func TestInit(t *testing.T) {
 	// expected: sets vault file path to tempDir,
 	// outputs and resume.yaml should exist at location
 	t.Run("fresh init", func(t *testing.T) {
+		fmt.Println("inhere")
 
 		// initalize
 		var c config.Config
@@ -29,7 +31,6 @@ func TestInit(t *testing.T) {
 
 		configFilePath, err := config.ConfigFilePath()
 		if err != nil {
-
 			t.Fatalf("configFilePath failed: %v", err)
 		}
 
