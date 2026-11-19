@@ -12,6 +12,7 @@ import (
 )
 
 var ErrNotInitialized = errors.New("resume.yaml not found; run 'resume init' to set up your vault")
+var ErrAlreadyExists = errors.New("already exists")
 
 type Config struct {
 	VaultPath string `yaml:"vault_path"`
@@ -52,7 +53,7 @@ func ensureAbsent(path, name string) error {
 	case err == nil && info.IsDir():
 		return fmt.Errorf("%s is a directory, expected a %s file", path, name)
 	case err == nil:
-		return fmt.Errorf("%s already exists at %s, use --force to overwrite", name, path)
+		return fmt.Errorf("%s %w at %s, use --force to overwrite", name, ErrAlreadyExists, path)
 	case errors.Is(err, fs.ErrNotExist):
 		return nil
 	default:
