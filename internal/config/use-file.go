@@ -10,10 +10,20 @@ import (
 // verify resolvedPath to file (resume) exists
 func UseFile(file string) (string, error) {
 	resolvedPath, err := resolvePath(file)
+	if err != nil {
+		return "", err
+	}
 	info, err := os.Stat(resolvedPath)
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
-			return "", fmt.Errorf("%w: %s", ErrNotInitialized, resolvedPath)
+
+			// --file was set but it missing
+			if file != "" {
+				return "", fmt.Errorf("resume file not found at %s: %w", resolvedPath, err)
+			}
+
+			// no --file set so vault resume.yaml is missing
+			return "", fmt.Errorf("%w: %s: %w", ErrNotInitialized, resolvedPath, err)
 		}
 
 		return "", fmt.Errorf("checking resume file: %w", err)
