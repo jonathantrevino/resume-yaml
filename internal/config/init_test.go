@@ -19,7 +19,7 @@ func TestInit(t *testing.T) {
 
 		// initalize
 		var c config.Config
-		tempDir := tempHelper(t)
+		tempDir := initTempHelper(t)
 		force := false
 		vaultFlag := "" // empty because we want to use tempDir instead
 		vaultPath := filepath.Join(tempDir, "resumes")
@@ -173,7 +173,7 @@ func TestInit(t *testing.T) {
 
 // create temp folder and environment variables
 // return tempDir and empty config struct
-func tempHelper(t *testing.T) string {
+func initTempHelper(t *testing.T) string {
 
 	tempDir := t.TempDir()
 	t.Setenv("HOME", tempDir)
