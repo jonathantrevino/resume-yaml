@@ -28,10 +28,16 @@ func FindPaths(file string) (Paths, error) {
 
 	// get config file location
 	configFilePath, err := config.ConfigFilePath()
-	if err != nil {
-		return p, err
-	}
 
+	switch err {
+	case nil:
+		p.ConfigFile.Exists = true
+	case fs.ErrNotExist:
+		p.ConfigFile.Exists = false
+	default:
+		p.ConfigFile.Err = err
+
+	}
 	// set config file location
 	p.ConfigFile.Path = configFilePath
 
@@ -45,8 +51,6 @@ func FindPaths(file string) (Paths, error) {
 			p.ConfigFile.Err = err
 		}
 
-		// unexpected stat err
-		return p, err
 	}
 
 	// load config
@@ -59,6 +63,9 @@ func FindPaths(file string) (Paths, error) {
 
 	}
 
+	// use vault path from config
+	p.VaultFolder.Path = c.VaultPath
+
 	// if config does not exist, then use default vault path
 	if !p.ConfigFile.Exists {
 
@@ -66,9 +73,6 @@ func FindPaths(file string) (Paths, error) {
 		p.VaultFolder.IsDefault = true
 
 	}
-
-	// use vault path from config
-	p.VaultFolder.Path = c.VaultPath
 
 	// check if vault path exists
 	if _, err := os.Stat(p.VaultFolder.Path); err != nil {
