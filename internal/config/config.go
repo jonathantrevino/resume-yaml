@@ -7,8 +7,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-
-	"github.com/goccy/go-yaml"
 )
 
 var ErrNotInitialized = errors.New("resume.yaml not found; run 'resume init' to set up your vault")
@@ -80,19 +78,12 @@ func resolvePath(file string) (string, error) {
 		return "", fmt.Errorf("get config file: %w", err)
 	}
 
-	// load config
-	data, err := os.ReadFile(configFilePath)
-	if err != nil {
-		if errors.Is(err, fs.ErrNotExist) {
-			return "", fmt.Errorf("missing config at %s, %w", configFilePath, err)
-		}
-		return "", fmt.Errorf("reading config file: %w", err)
-	}
-
-	// unmarshal data
 	var c Config
-	if err := yaml.Unmarshal(data, &c); err != nil {
-		return "", fmt.Errorf("unmarshalling config data: %w", err)
+	if err := c.Load(configFilePath); err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return "", fmt.Errorf("%w: missing config at %s: %w", ErrNotInitialized, configFilePath, err)
+		}
+		return "", fmt.Errorf("load config: %w", err)
 	}
 
 	if c.VaultPath == "" {
