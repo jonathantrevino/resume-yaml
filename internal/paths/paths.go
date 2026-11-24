@@ -74,14 +74,14 @@ func FindPaths(file string) (Paths, error) {
 
 	}
 
+	p.VaultFolder.Exists = true
+
 	// check if vault path exists
 	if _, err := os.Stat(p.VaultFolder.Path); err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
 			p.VaultFolder.Exists = false
 		}
 	}
-
-	p.VaultFolder.Exists = true
 
 	// work out the resume path
 	resumePath := file
