@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"resume-yaml/internal/config"
 	"resume-yaml/internal/resume"
+	"resume-yaml/internal/testutil"
 	"testing"
 
 	"github.com/goccy/go-yaml"
@@ -17,7 +18,7 @@ func TestUseFile(t *testing.T) {
 	// simulate sending --file "resume-custom.yaml" to right location
 	t.Run("use flag, file exists", func(t *testing.T) {
 
-		tempDir := tempHelper(t)
+		tempDir := testutil.TempHelper(t)
 
 		// create custom resume-custom.yaml for --file flag
 		r := resume.Resume{
@@ -52,7 +53,7 @@ func TestUseFile(t *testing.T) {
 	// simulate sending --file "missing-file.yaml" which is a wrong location
 	t.Run("use flag, file missing", func(t *testing.T) {
 
-		tempDir := tempHelper(t)
+		tempDir := testutil.TempHelper(t)
 		_, err := config.UseFile(filepath.Join(tempDir, "missing-file.yaml"))
 
 		if !errors.Is(err, fs.ErrNotExist) {
@@ -64,7 +65,7 @@ func TestUseFile(t *testing.T) {
 	// use default resume.yaml after init
 	t.Run("no flag, after init", func(t *testing.T) {
 
-		tempDir := tempHelper(t)
+		tempDir := testutil.TempHelper(t)
 		force := false
 		vaultFlag := ""
 
@@ -86,7 +87,7 @@ func TestUseFile(t *testing.T) {
 
 	// don't initialize and don't send a flag expect run init
 	t.Run("no flag, never initialized", func(t *testing.T) {
-		_ = tempHelper(t)
+		_ = testutil.TempHelper(t)
 		_, err := config.UseFile("")
 		if !errors.Is(err, fs.ErrNotExist) {
 			t.Errorf("expected fs.ErrNotExist got: %v", err)
@@ -95,7 +96,7 @@ func TestUseFile(t *testing.T) {
 
 	// run init, but delete resume.yaml and try usefile with no flag
 	t.Run("no flag, resume deleted", func(t *testing.T) {
-		tempDir := tempHelper(t)
+		tempDir := testutil.TempHelper(t)
 
 		force := false
 		vaultFlag := ""

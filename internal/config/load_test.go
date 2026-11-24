@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"resume-yaml/internal/config"
+	"resume-yaml/internal/testutil"
 	"testing"
 
 	"github.com/goccy/go-yaml"
@@ -15,7 +16,7 @@ func TestLoad(t *testing.T) {
 
 	t.Run("valid", func(t *testing.T) {
 		// initialize
-		tempDir := t.TempDir()
+		tempDir := testutil.TempHelper(t)
 		configFilePath := filepath.Join(tempDir, "config.yaml") // example config.yaml location
 		vaultPath := filepath.Join(tempDir, "resumes")
 
@@ -55,7 +56,7 @@ func TestLoad(t *testing.T) {
 
 		// initialize
 		var c config.Config
-		tempDir := t.TempDir()
+		tempDir := testutil.TempHelper(t)
 		dir := filepath.Join(tempDir, "missing")
 
 		// load random path
@@ -71,7 +72,7 @@ func TestLoad(t *testing.T) {
 	t.Run("broken", func(t *testing.T) {
 
 		// initialize
-		tempDir := t.TempDir()
+		tempDir := testutil.TempHelper(t)
 		configFilePath := filepath.Join(tempDir, "config.yaml") // example config.yaml location
 		var c config.Config
 

@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"resume-yaml/internal/config"
+	"resume-yaml/internal/testutil"
 	"testing"
 )
 
@@ -19,7 +20,7 @@ func TestInit(t *testing.T) {
 
 		// initalize
 		var c config.Config
-		tempDir := initTempHelper(t)
+		tempDir := testutil.TempHelper(t)
 		force := false
 		vaultFlag := "" // empty because we want to use tempDir instead
 		vaultPath := filepath.Join(tempDir, "resumes")
@@ -80,7 +81,7 @@ func TestInit(t *testing.T) {
 	// existing config and or resume.yaml file
 	t.Run("refuse init", func(t *testing.T) {
 		// initalize
-		tempDir := tempHelper(t)
+		tempDir := testutil.TempHelper(t)
 		force := false
 		vaultFlag := "" // empty because we want to use tempDir instead
 		vaultPath := filepath.Join(tempDir, "resumes")
@@ -126,7 +127,7 @@ func TestInit(t *testing.T) {
 	// expected: should overwrite config and or resume.yaml file
 	t.Run("force init", func(t *testing.T) {
 		// initalize
-		tempDir := tempHelper(t)
+		tempDir := testutil.TempHelper(t)
 		force := false
 		vaultFlag := "" // empty because we want to use tempDir instead
 		vaultPath := filepath.Join(tempDir, "resumes")
@@ -168,17 +169,5 @@ func TestInit(t *testing.T) {
 		}
 
 	})
-
-}
-
-// create temp folder and environment variables
-// return tempDir and empty config struct
-func initTempHelper(t *testing.T) string {
-
-	tempDir := t.TempDir()
-	t.Setenv("HOME", tempDir)
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tempDir, ".config"))
-
-	return tempDir
 
 }
