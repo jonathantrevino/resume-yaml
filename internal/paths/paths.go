@@ -87,6 +87,7 @@ func FindPaths(file string) (Paths, error) {
 	resumePath := file
 	if resumePath == "" {
 		resumePath = filepath.Join(p.VaultFolder.Path, "resume.yaml")
+		p.ResumeFile.IsDefault = true
 	}
 	p.ResumeFile.Path = resumePath
 
