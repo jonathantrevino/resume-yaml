@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"resume-yaml/internal/config"
 	"resume-yaml/internal/paths"
+	"resume-yaml/internal/testutil"
 	"testing"
 )
 
@@ -73,6 +74,55 @@ func TestFindPaths(t *testing.T) {
 	// after init
 	t.Run("after init", func(t *testing.T) {
 
+		// TODO: Add checks for IsDefault
+
+		// initialize
+		tempDir := testutil.TempHelper(t)
+		configDir, _ := config.ConfigFilePath()
+		force := false
+		vaultFlag := ""
+
+		config.Init(force, vaultFlag)
+
+		// expected path locations
+		vaultFolderPath := filepath.Join(tempDir, "resumes")
+		resumeFilePath := filepath.Join(tempDir, "resumes", "resume.yaml")
+
+		emptyFile := ""
+		p, err := paths.FindPaths(emptyFile)
+		if err != nil {
+			t.Fatalf("find paths: %v", err)
+		}
+
+		// verify config location
+		if p.ConfigFile.Path != configDir {
+			t.Errorf("expected config location %s got %s", configDir, p.ConfigFile.Path)
+		}
+
+		// check if config is created
+		if !p.ConfigFile.Exists {
+			t.Errorf("config not initialized")
+		}
+
+		// verify vault location
+		if p.VaultFolder.Path != vaultFolderPath {
+			t.Errorf("expected vault location %s got %s", vaultFolderPath, p.VaultFolder.Path)
+		}
+
+		// check if vault is created
+		if !p.VaultFolder.Exists {
+			t.Errorf("vault not initialized")
+		}
+
+		// verify resume location
+		if p.ResumeFile.Path != resumeFilePath {
+			t.Errorf("expected resume location %s got %s", vaultFolderPath, p.VaultFolder.Path)
+		}
+
+		// check if resume.yaml was created
+		if !p.ResumeFile.Exists {
+			t.Errorf("resume not initialized")
+		}
 	})
 
 	// with --file flag
