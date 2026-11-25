@@ -2,6 +2,7 @@ package paths_test
 
 import (
 	"errors"
+	"os"
 	"path/filepath"
 	"resume-yaml/internal/config"
 	"resume-yaml/internal/paths"
@@ -16,9 +17,9 @@ func TestFindPaths(t *testing.T) {
 
 		// initialize
 		tempDir := pathsTempHelper(t)
-		configDir, _ := config.ConfigFilePath()
 
 		// expected path locations
+		configFilePath, _ := config.ConfigFilePath()
 		vaultFolderPath := filepath.Join(tempDir, "resumes")
 		resumeFilePath := filepath.Join(tempDir, "resumes", "resume.yaml")
 
@@ -29,8 +30,8 @@ func TestFindPaths(t *testing.T) {
 		}
 
 		// verify config location
-		if p.ConfigFile.Path != configDir {
-			t.Errorf("expected config location %s got %s", configDir, p.ConfigFile.Path)
+		if p.ConfigFile.Path != configFilePath {
+			t.Errorf("expected config location %s got %s", configFilePath, p.ConfigFile.Path)
 		}
 
 		// check if config is already created
@@ -78,13 +79,13 @@ func TestFindPaths(t *testing.T) {
 
 		// initialize
 		tempDir := testutil.TempHelper(t)
-		configDir, _ := config.ConfigFilePath()
 		force := false
 		vaultFlag := ""
 
 		config.Init(force, vaultFlag)
 
 		// expected path locations
+		configFilePath, _ := config.ConfigFilePath()
 		vaultFolderPath := filepath.Join(tempDir, "resumes")
 		resumeFilePath := filepath.Join(tempDir, "resumes", "resume.yaml")
 
@@ -95,8 +96,8 @@ func TestFindPaths(t *testing.T) {
 		}
 
 		// verify config location
-		if p.ConfigFile.Path != configDir {
-			t.Errorf("expected config location %s got %s", configDir, p.ConfigFile.Path)
+		if p.ConfigFile.Path != configFilePath {
+			t.Errorf("expected config location %s got %s", configFilePath, p.ConfigFile.Path)
 		}
 
 		// check if config is created
@@ -123,12 +124,82 @@ func TestFindPaths(t *testing.T) {
 		if !p.ResumeFile.Exists {
 			t.Errorf("resume not initialized")
 		}
+
+		// check if resume is default location
+		if !p.ResumeFile.IsDefault {
+			t.Errorf("resume is not default location")
+		}
 	})
 
 	// with --file flag
 	t.Run("with --file flag", func(t *testing.T) {
 
+		// initialize
+		tempDir := testutil.TempHelper(t)
+		force := false
+		vaultPath := ""
+
+		config.Init(force, vaultPath)
+
+		// expected path locations
+		configFilePath, _ := config.ConfigFilePath()
+		vaultFolderPath := filepath.Join(tempDir, "resumes")
+		file := "custom-resume.yaml"
+		resumeFilePath := filepath.Join(tempDir, "resumes", file)
+
+		// create resume file
+		if err := os.WriteFile(resumeFilePath, []byte("testing"), 0755); err != nil {
+			t.Fatalf("unexpected error %v", err)
+		}
+
+		// pass in resumeFilePath instead of file because FindPath expects a full path
+		p, err := paths.FindPaths(resumeFilePath)
+
+		if err != nil {
+			t.Fatalf("find paths: %v", err)
+		}
+
+		// verify config location
+		if p.ConfigFile.Path != configFilePath {
+			t.Errorf("expected config location %s got %s", configFilePath, p.ConfigFile.Path)
+		}
+
+		// check if config is created
+		if !p.ConfigFile.Exists {
+			t.Errorf("config is not initialized")
+
+		}
+
+		// verify vault location
+		if p.VaultFolder.Path != vaultFolderPath {
+			t.Errorf("expected vault location %s got %s", vaultFolderPath, p.VaultFolder.Path)
+		}
+
+		// check if vault is created
+		if !p.VaultFolder.Exists {
+			t.Errorf("vault is not initialized")
+
+		}
+
+		// verify resume location
+		if p.ResumeFile.Path != resumeFilePath {
+			t.Errorf("expected resume location %s got %s", resumeFilePath, p.ResumeFile.Path)
+		}
+
+		// check if resume is created
+		if !p.ResumeFile.Exists {
+			t.Errorf("resume is not initialized")
+		}
+
+		// check if resume is default location
+		if p.ResumeFile.IsDefault {
+			t.Errorf("resume is default location (not set --file)")
+		}
 	})
+
+	// TODO: Test cases to add:
+	// - after init with flag to missing file
+	// - after init but delete config manually
 }
 
 // create temp folder and environment variables
